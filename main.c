@@ -3,36 +3,40 @@
 #include "table.h"
 #include "csv.h"
 #include "lexer.h"
+#include "parser.h"
+#include "exec.h"
 
 int main(int argc, char *argv[])
 {
-    if (argc < 3)
+    if (argc < 2)
     {
-        fprintf(stderr, "usage: %s <file.csv> <query>\n", argv[0]);
+        fprintf(stderr, "usage: %s \"SELECT ... FROM file.csv ...\"\n", argv[0]);
         return 1;
     }
 
-    Table *t = load_csv(argv[1]);
+    TokenStream *ts = tokenize(argv[1]);
+    if (!ts)
+        return 1;
+
+    QueryPlan *qp = parse(ts);
+    if (!qp)
+    {
+        free_tokens(ts);
+        return 1;
+    }
+
+    Table *t = load_csv(qp->filename);
     if (!t)
-        return 1;
-
-    printf("=== TABLE ===\n");
-    for (int i = 0; i < t->ncols; i++)
-        printf("%-16s", t->headers[i]);
-    printf("\n");
-    for (int r = 0; r < t->nrows; r++)
     {
-        for (int c = 0; c < t->ncols; c++)
-            printf("%-16s", t->rows[r].values[c]);
-        printf("\n");
+        free_query_plan(qp);
+        free_tokens(ts);
+        return 1;
     }
 
-    printf("\n=== TOKENS ===\n");
-    TokenStream *ts = tokenize(argv[2]);
-    for (int i = 0; i < ts->count; i++)
-        printf("[%2d]  %s\n", ts->tokens[i].type, ts->tokens[i].text);
+    execute(t, qp);
 
     free_table(t);
+    free_query_plan(qp);
     free_tokens(ts);
     return 0;
 }
