@@ -2,6 +2,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include "lexer.h"
 
 static int is_keyword(const char *word, TokenType *out)
@@ -21,10 +22,11 @@ static int is_keyword(const char *word, TokenType *out)
         {"COUNT", TOK_COUNT},
         {"SUM", TOK_SUM},
         {"AVG", TOK_AVG},
-    };
+        {"MAX", TOK_MAX},
+        {"MIN", TOK_MIN}};
     int n = sizeof(kws) / sizeof(kws[0]);
     for (int i = 0; i < n; i++)
-        if (strcasecmp(word, kws[i].kw) == 0)
+        if (strcmp(word, kws[i].kw) == 0)
         {
             *out = kws[i].tt;
             return 1;
@@ -142,6 +144,13 @@ TokenStream *tokenize(const char *input)
             while ((isalnum((unsigned char)*p) || *p == '_' || *p == '.') && i < 255)
                 tok->text[i++] = *p++;
             tok->text[i] = '\0';
+
+            /* uppercase a copy for keyword lookup */
+            char upper[256];
+            for (int j = 0; tok->text[j]; j++)
+                upper[j] = toupper((unsigned char)tok->text[j]);
+            upper[strlen(tok->text)] = '\0';
+
             TokenType kw;
             tok->type = is_keyword(tok->text, &kw) ? kw : TOK_IDENT;
         }

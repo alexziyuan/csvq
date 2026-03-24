@@ -15,9 +15,9 @@ typedef enum
 } CmpOp;
 typedef enum
 {
-    EEXPR_CMP,
-    EEXPR_AND,
-    EEXPR_OR
+    EXPR_CMP,
+    EXPR_AND,
+    EXPR_OR
 } ExprType;
 
 typedef struct Expr
@@ -51,7 +51,7 @@ typedef struct
 typedef struct
 {
     char filename[256];
-    SelectCol select_cols[MAX_SELECT_COLS];
+    SelectCol cols[MAX_SELECT_COLS];
     int ncols;        /* 0 = SELECT * */
     Expr *where;      /* NULL = no filter */
     char groupby[64]; /* "" = no GROUP BY */
